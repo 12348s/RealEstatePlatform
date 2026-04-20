@@ -3,44 +3,41 @@
 import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname, useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 
-export default function Navbar() {
+function NavbarContent() {
   const { data: session } = useSession();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const currentListing = searchParams.get("listing");
-  const currentType    = searchParams.get("type");
+  const currentListing = searchParams.get("listing") || searchParams.get("listing_type");
+  const currentType = searchParams.get("type");
 
   // Determine active tab
   const getActive = (label) => {
     if (label === "Properties" && pathname === "/listings" && !currentListing && !currentType) return true;
-    if (label === "Buy"        && currentListing === "Buy") return true;
-    if (label === "Rent"       && currentListing === "Rent") return true;
-    if (label === "Commercial" && currentType && currentType.includes("Office")) return true;
-    if (label === "Admin"      && pathname === "/admin") return true;
+    if (label === "Buy" && (currentListing === "Buy" || currentListing === "P")) return true;
+    if (label === "Rent" && (currentListing === "Rent" || currentListing === "R")) return true;
+    if (label === "Admin" && pathname === "/admin") return true;
     return false;
   };
 
   const navLinks = [
     { label: "Properties", href: "/listings" },
-    { label: "Buy",        href: "/listings?listing=Buy" },
-    { label: "Rent",       href: "/listings?listing=Rent" },
-    { label: "Commercial", href: "/listings?type=Office+Space" },
+    { label: "Buy", href: "/listings?listing_type=P" },
+    { label: "Rent", href: "/listings?listing_type=R" },
   ];
 
   const handleTopBarClick = (action) => {
     if (action === "Post Free Property") {
       if (!session) {
-        router.push("/login?tab=register");
+        router.push("/login");
       } else if (session.user?.role === "agent" || session.user?.role === "admin") {
         router.push("/property/add");
       } else {
         alert("Only agents can post properties");
       }
-    } else if (action === "Advertise") {
-      router.push("/advertise");
     } else if (action === "Help") {
       router.push("/help");
     }
@@ -50,9 +47,9 @@ export default function Navbar() {
     <>
       {/* Top bar */}
       <div style={{ background: "#1a1a1a", padding: "5px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: "#888" }}>Mumbai's #1 Commercial Real Estate Platform</span>
+        <span style={{ fontSize: 12, color: "#888" }}>Vijayawada's #1 Residential Real Estate Platform</span>
         <div style={{ display: "flex", gap: 20 }}>
-          {["Post Free Property", "Advertise", "Help"].map(l => (
+          {["Post Free Property", "Help"].map(l => (
             <span 
               key={l} 
               onClick={() => handleTopBarClick(l)}
@@ -194,6 +191,36 @@ export default function Navbar() {
                         </div>
                       </Link>
                     )}
+                    {session.user?.role === "buyer" && (
+                      <Link href="/dashboard" style={{ textDecoration: "none" }}>
+                        <div style={{
+                          padding: "10px 14px",
+                          color: "#333",
+                          cursor: "pointer",
+                          fontSize: 13,
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f5f5f5"}
+                          onMouseLeave={e => e.currentTarget.style.background = "white"}
+                        >
+                          Dashboard
+                        </div>
+                      </Link>
+                    )}
+                    {session.user?.role === "agent" && (
+                      <Link href="/agent-dashboard" style={{ textDecoration: "none" }}>
+                        <div style={{
+                          padding: "10px 14px",
+                          color: "#333",
+                          cursor: "pointer",
+                          fontSize: 13,
+                        }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f5f5f5"}
+                          onMouseLeave={e => e.currentTarget.style.background = "white"}
+                        >
+                          Agent Dashboard
+                        </div>
+                      </Link>
+                    )}
                     {session.user?.role === "admin" && (
                       <Link href="/admin" style={{ textDecoration: "none" }}>
                         <div style={{
@@ -205,7 +232,7 @@ export default function Navbar() {
                           onMouseEnter={e => e.currentTarget.style.background = "#f5f5f5"}
                           onMouseLeave={e => e.currentTarget.style.background = "white"}
                         >
-                          Admin Panel
+                          Admin Dashboard
                         </div>
                       </Link>
                     )}
@@ -226,7 +253,7 @@ export default function Navbar() {
                     Login
                   </button>
                 </Link>
-                <Link href="/login?tab=register" style={{ textDecoration: "none" }}>
+                <Link href="/register" style={{ textDecoration: "none" }}>
                   <button style={{ background: "#E03A3C", border: "none", color: "white", padding: "7px 16px", borderRadius: 6, fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                     Register
                   </button>
@@ -237,5 +264,27 @@ export default function Navbar() {
         </div>
       </nav>
     </>
+  );
+}
+
+export default function Navbar() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        background: "#1a1a1a", 
+        padding: "5px 40px", 
+        display: "flex", 
+        justifyContent: "space-between", 
+        alignItems: "center"
+      }}>
+        <span style={{ fontSize: 12, color: "#888" }}>Vijayawada's #1 Residential Real Estate Platform</span>
+        <div style={{ display: "flex", gap: 20 }}>
+          <span style={{ fontSize: 12, color: "#888" }}>Post Free Property</span>
+          <span style={{ fontSize: 12, color: "#888" }}>Help</span>
+        </div>
+      </div>
+    }>
+      <NavbarContent />
+    </Suspense>
   );
 }

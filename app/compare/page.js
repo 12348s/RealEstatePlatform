@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { Suspense } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 
@@ -35,16 +37,89 @@ function PropertyComparison({ properties }) {
       n >= 100000 ? `₹${(n / 100000).toFixed(0)} L` :
         `₹${n?.toLocaleString()}`;
 
+  const prices = properties.map((p) => parseFloat(p.min_price) || 0);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+
+  const getPriceColor = (p) => {
+    const price = parseFloat(p.min_price) || 0;
+    if (price === minPrice && prices.filter((x) => x === minPrice).length === 1) {
+      return "#16a34a";
+    }
+    if (price === maxPrice && prices.filter((x) => x === maxPrice).length === 1) {
+      return "#dc2626";
+    }
+    return "#1a1a1a";
+  };
+
   const fields = [
-    { key: "title", label: "Property Name" },
-    { key: "type", label: "Type" },
-    { key: "listing", label: "Listing Type" },
-    { key: "location", label: "Location" },
-    { key: "price", label: "Price", format: fmtPrice },
-    { key: "area", label: "Area (sqft)" },
-    { key: "beds", label: "Bedrooms" },
-    { key: "baths", label: "Bathrooms" },
-    { key: "status", label: "Status" },
+    {
+      label: "Price",
+      fn: (p) => p.price ? `₹${p.price}` : "N/A",
+    },
+    {
+      label: "Type",
+      fn: (p) => p.type || "N/A",
+    },
+    {
+      label: "Locality",
+      fn: (p) => p.locality || p.location || "N/A",
+    },
+    {
+      label: "Bedrooms",
+      fn: (p) => p.bedrooms && p.bedrooms !== "0"
+        ? `${p.bedrooms} BHK`
+        : "N/A",
+    },
+    {
+      label: "Bathrooms",
+      fn: (p) => p.bathrooms && p.bathrooms !== "0"
+        ? p.bathrooms
+        : "N/A",
+    },
+    {
+      label: "Area",
+      fn: (p) => p.area || "N/A",
+    },
+    {
+      label: "Price/sqft",
+      fn: (p) => p.price_per_sqft && p.price_per_sqft !== "0"
+        ? `₹${parseFloat(p.price_per_sqft).toLocaleString("en-IN")}`
+        : "N/A",
+    },
+    {
+      label: "Total Floors",
+      fn: (p) => p.total_floors && p.total_floors !== "0"
+        ? p.total_floors
+        : "N/A",
+    },
+    {
+      label: "Age",
+      fn: (p) => p.age && p.age !== "0"
+        ? `${p.age} years`
+        : "N/A",
+    },
+    {
+      label: "Listing Type",
+      fn: (p) => {
+        if (p.listing_type === "P") return "Buy";
+        if (p.listing_type === "R") return "Rent";
+        if (p.listing_type === "PG") return "PG";
+        return p.listing || "N/A";
+      },
+    },
+    {
+      label: "New Launch",
+      fn: (p) => p.is_new_launch === "Y" ? "Yes" : "No",
+    },
+    {
+      label: "Verified",
+      fn: (p) => p.verified ? "Yes" : "No",
+    },
+    {
+      label: "Seller",
+      fn: (p) => p.seller_name || p.seller_company || "N/A",
+    },
   ];
 
   return (
@@ -63,12 +138,23 @@ function PropertyComparison({ properties }) {
                   <th key={i} style={{ padding: "12px", textAlign: "center", fontWeight: 700, minWidth: 200 }}>
                     <div style={{ marginBottom: 10 }}>
                       <img
-                        src={prop.imageUrl || "https://via.placeholder.com/150"}
-                        alt={prop.title}
+                        src={prop.images?.[0]
+                          ? `https://images.weserv.nl/?url=${encodeURIComponent(prop.images[0])}&w=400&q=80`
+                          : "/placeholder.jpg"}
+                        alt={prop.title || "Property image"}
                         style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 6, marginBottom: 10 }}
+                        onError={(e) => { e.target.src = "/placeholder.jpg"; }}
                       />
                     </div>
-                    <div style={{ fontSize: 14, fontWeight: 600 }}>{prop.title}</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 2 }}>
+                      {prop.title || "Property"}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#999", marginBottom: 6 }}>
+                      {prop.locality || prop.location || "Vijayawada"}, Vijayawada
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: "#E03A3C", marginBottom: 8 }}>
+                      ₹{prop.price || "N/A"}
+                    </div>
                   </th>
                 ))}
               </tr>
@@ -77,33 +163,27 @@ function PropertyComparison({ properties }) {
               {fields.map((field, idx) => (
                 <tr key={idx} style={{ borderBottom: "1px solid #e0e0e0", background: idx % 2 === 0 ? "white" : "#f9f9f9" }}>
                   <td style={{ padding: "12px", fontWeight: 600, color: "#333" }}>{field.label}</td>
-                  {properties.map((prop, i) => (
-                    <td key={i} style={{ padding: "12px", textAlign: "center", color: "#555" }}>
-                      {field.format
-                        ? field.format(prop[field.key])
-                        : field.key === "status"
-                          ? (
-                            <span style={{
-                              background: prop.status === "available" ? "#E0F2F1" : "#FEE2E2",
-                              color: prop.status === "available" ? "#00897B" : "#E03A3C",
-                              padding: "4px 8px",
-                              borderRadius: 4,
-                              fontSize: 12,
-                              fontWeight: 600,
-                            }}>
-                              {prop.status?.toUpperCase()}
-                            </span>
-                          )
-                          : prop[field.key]}
-                    </td>
-                  ))}
+                  {properties.map((prop, i) => {
+                    const value = field.fn(prop);
+                    const isPrice = field.label === "Price";
+                    const color = isPrice ? getPriceColor(prop) : "#555";
+                    const weight = isPrice ? (color !== "#555" ? 700 : 400) : 400;
+
+                    return (
+                      <td key={i} style={{ padding: "12px", textAlign: "center", color }}>
+                        <span style={{ color, fontWeight: weight }}>
+                          {value}
+                        </span>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
               <tr style={{ background: "#f9f9f9" }}>
                 <td style={{ padding: "12px", fontWeight: 600 }}>Actions</td>
                 {properties.map((prop, i) => (
                   <td key={i} style={{ padding: "12px", textAlign: "center" }}>
-                    <Link href={`/property/${prop.id}`}>
+                    <Link href={`/property/${prop.id || prop._id}`}>
                       <button style={{
                         background: "#E03A3C",
                         color: "white",
@@ -128,10 +208,18 @@ function PropertyComparison({ properties }) {
   );
 }
 
-export default function ComparePage() {
+function ComparePageContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { data: session, status } = useSession();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [status, router]);
 
   useEffect(() => {
     const ids = searchParams.get("ids");
@@ -140,10 +228,10 @@ export default function ComparePage() {
       return;
     }
 
-    const idArray = ids.split(",").map(Number);
+    const idArray = ids.split(",").map(id => id.trim());
     Promise.all(
       idArray.map(id =>
-        fetch(`/api/properties/${id}`).then(r => r.json()).catch(() => null)
+        fetch(`/api/properties/${id}`).then(r => r.ok ? r.json() : null).catch(() => null)
       )
     ).then(results => {
       setProperties(results.filter(p => p !== null));
@@ -151,7 +239,7 @@ export default function ComparePage() {
     });
   }, [searchParams]);
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <>
         <Navbar />
@@ -162,5 +250,27 @@ export default function ComparePage() {
     );
   }
 
+  if (!session) return null;
+
   return <PropertyComparison properties={properties} />;
+}
+
+export default function ComparePage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        minHeight: "100vh", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        fontFamily: "sans-serif",
+        color: "#999",
+        fontSize: 16,
+      }}>
+        Loading...
+      </div>
+    }>
+      <ComparePageContent />
+    </Suspense>
+  );
 }

@@ -51,3 +51,8 @@ __pycache__/
 logs
 *.log
 lerna-debug.log*
+
+# Large data files — already seeded to MongoDB Atlas
+final_merged.json
+housing_data.json
+MumbaiCommercialProperties.json

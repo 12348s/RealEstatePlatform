@@ -4,37 +4,31 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/Navbar";
+import { getImageSrc, fmtPrice, PLACEHOLDER_IMG } from "@/lib/constants";
 
-const IMGS = [
-  "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&q=80",
-  "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&q=80",
-  "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80",
-  "https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=600&q=80",
-  "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&q=80",
-];
-
+// Vijayawada localities
 const localities = [
-  "Lower Parel",
-  "Andheri West",
-  "BKC",
-  "Worli",
-  "Powai",
-  "Goregaon",
-  "Malad",
-  "Borivali",
+  "Tadepalli",
+  "Benz Circle",
+  "Moghalrajpuram",
+  "Machilipatnam",
+  "Dwaraka Nagar",
+  "Vijayawada City Center",
 ];
 
-function fmtPrice(price) {
-  if (!price) return "Price on Request";
-  if (price >= 10000000) return `₹${(price / 10000000).toFixed(1)} Cr`;
-  if (price >= 100000) return `₹${(price / 100000).toFixed(1)} L`;
-  return `₹${price.toLocaleString()}`;
-}
+// Property types found in the scraped data
+const propertyTypes = [
+  "Residential Apartment",
+  "Independent House/Villa",
+  "Plot/Land",
+  "Commercial Office Space",
+  "Shop/Showroom",
+  "Builder Floor Apartment",
+];
 
 export default function HomePage({ properties: initialProperties = [], total: initialTotal = 0 }) {
   const router = useRouter();
   const { data: session } = useSession();
-  const [tab, setTab] = useState("Buy");
   const [propType, setPropType] = useState("");
   const [search, setSearch] = useState("");
   const [properties, setProperties] = useState(initialProperties);
@@ -66,68 +60,44 @@ export default function HomePage({ properties: initialProperties = [], total: in
       <Navbar />
 
       {/* ── HERO ── */}
-      <div style={{ position: "relative", background: "#1a1a2e", minHeight: 460, overflow: "hidden" }}>
-        <img
-          src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1600&q=80"
-          alt=""
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", opacity: 0.3 }}
-          onError={e => { e.target.style.display = "none"; }}
-        />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(26,26,46,0.7), rgba(26,26,46,0.5))" }} />
+      <div style={{ position: "relative", minHeight: "580px", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "#1a1a2e" }}>
+        {/* Background image */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: "url('https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1600&q=80')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }} />
 
-        <div style={{ position: "relative", zIndex: 1, maxWidth: 900, margin: "0 auto", padding: "48px 20px 60px", textAlign: "center" }}>
+        {/* Dark overlay so text stays readable */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(135deg, rgba(15,15,40,0.85) 0%, rgba(30,30,70,0.75) 100%)",
+        }} />
+
+        <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: 900, padding: "0 20px", textAlign: "center" }}>
           <h1 style={{ fontSize: "clamp(24px,3.5vw,40px)", fontWeight: 800, color: "white", marginBottom: 6, letterSpacing: "-0.5px" }}>
-            Find the perfect commercial space
+            Find the perfect property in Vijayawada
           </h1>
           <p style={{ color: "rgba(255,255,255,0.75)", fontSize: 15, marginBottom: 28 }}>
-            Mumbai's premium inventory of verified shops and office spaces
+            Andhra Pradesh's fastest growing real estate market
           </p>
 
           {/* Search box */}
           <div style={{ background: "white", borderRadius: 10, boxShadow: "0 8px 40px rgba(0,0,0,0.3)", overflow: "hidden" }}>
-            <div style={{ display: "flex", borderBottom: "1px solid #f0f0f0", padding: "0 16px" }}>
-              {["Buy", "Rent", "New Launch", "Commercial", "Plots/Land"].map(t => (
-                <button
-                  key={t}
-                  onClick={() => setTab(t)}
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: 14,
-                    fontWeight: tab === t ? 700 : 500,
-                    border: "none",
-                    background: "transparent",
-                    cursor: "pointer",
-                    color: tab === t ? "#E03A3C" : "#555",
-                    borderBottom: tab === t ? "3px solid #E03A3C" : "3px solid transparent",
-                    fontFamily: "inherit",
-                    marginBottom: -1,
-                    whiteSpace: "nowrap",
-                    transition: "color 0.2s",
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-              <div style={{ flex: 1 }} />
-              {!session && (
-                <Link href="/login" style={{ textDecoration: "none", display: "flex", alignItems: "center" }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "#E03A3C", padding: "0 12px", display: "flex", alignItems: "center", gap: 4 }}>
-                    Post Property
-                    <span style={{ background: "#00897B", color: "white", fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 3 }}>FREE</span>
-                  </span>
-                </Link>
-              )}
-            </div>
-
             <div style={{ display: "flex", alignItems: "center", padding: "14px 16px", gap: 10 }}>
               <select
                 value={propType}
                 onChange={e => setPropType(e.target.value)}
-                style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", color: "#333", background: "white", minWidth: 140, cursor: "pointer" }}
+                style={{ border: "1px solid #e0e0e0", borderRadius: 6, padding: "9px 12px", fontSize: 13, fontFamily: "inherit", color: "#333", background: "white", minWidth: 160, cursor: "pointer" }}
               >
                 <option value="">All Types</option>
-                <option value="Shop">Shop</option>
-                <option value="Office Space">Office Space</option>
+                {propertyTypes.map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
               </select>
               <div style={{ flex: 1, display: "flex", alignItems: "center", border: "1px solid #e0e0e0", borderRadius: 6, padding: "0 12px" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#999" strokeWidth="2" style={{ flexShrink: 0, marginRight: 8 }}>
@@ -138,7 +108,7 @@ export default function HomePage({ properties: initialProperties = [], total: in
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleSearch()}
-                  placeholder={`Search "Lower Parel, Andheri West..."`}
+                  placeholder="Search by locality, project name..."
                   style={{ border: "none", fontSize: 14, flex: 1, padding: "9px 0", fontFamily: "inherit", color: "#333", outline: "none" }}
                 />
               </div>
@@ -151,8 +121,8 @@ export default function HomePage({ properties: initialProperties = [], total: in
             </div>
 
             <div style={{ padding: "8px 16px 14px", display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap", borderTop: "1px solid #f5f5f5" }}>
-              <span style={{ fontSize: 12, color: "#999" }}>Popular:</span>
-              {localities.slice(0, 4).map(l => (
+              <span style={{ fontSize: 12, color: "#999" }}>Popular localities:</span>
+              {localities.slice(0, 3).map(l => (
                 <span
                   key={l}
                   onClick={() => router.push(`/listings?search=${encodeURIComponent(l)}`)}
@@ -179,7 +149,7 @@ export default function HomePage({ properties: initialProperties = [], total: in
                   <rect x="3" y="14" width="7" height="7" />
                   <rect x="14" y="14" width="7" height="7" />
                 </svg>
-                Buy in {l}
+                {l}
               </div>
             </Link>
           ))}
@@ -194,27 +164,21 @@ export default function HomePage({ properties: initialProperties = [], total: in
 
           {/* Recommended Properties */}
           <div style={{ marginBottom: 32 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", marginBottom: 4 }}>Recommended Properties</h2>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", marginBottom: 4 }}>Featured Properties</h2>
             <p style={{ fontSize: 13, color: "#999", marginBottom: 20 }}>Curated especially for you</p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 16 }}>
-              {properties.slice(0, 8).map((prop, i) => (
-                <Link key={prop.id} href={`/property/${prop.id}`} style={{ textDecoration: "none" }}>
+              {properties.slice(0, 8).map((prop) => (
+                <Link key={prop.id || prop._id} href={`/property/${prop.id || prop._id}`} style={{ textDecoration: "none" }}>
                   <div style={{ background: "white", border: "1px solid #e8e8e8", borderRadius: 8, overflow: "hidden" }}>
                     <div style={{ position: "relative" }}>
                       <img
-                        src={prop.imageUrl || IMGS[i % IMGS.length]}
+                        src={getImageSrc(prop)}
                         alt={prop.title}
                         style={{ width: "100%", height: 160, objectFit: "cover", display: "block" }}
-                        onError={e => { e.target.src = IMGS[i % IMGS.length]; }}
+                        onError={e => { e.target.src = PLACEHOLDER_IMG; }}
                       />
-                      {prop.featured && (
-                        <div style={{ position: "absolute", top: 8, left: 8, background: "#00897B", color: "white", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 4, display: "flex", alignItems: "center", gap: 3 }}>
-                          <svg width="9" height="9" viewBox="0 0 24 24" fill="white" stroke="none"><polyline points="20 6 9 17 4 12" /></svg>
-                          Verified
-                        </div>
-                      )}
                       <div style={{ position: "absolute", bottom: 8, left: 8, background: "rgba(0,0,0,0.75)", color: "white", fontSize: 13, fontWeight: 700, padding: "4px 10px", borderRadius: 4 }}>
-                        {fmtPrice(prop.price)}
+                        ₹{prop.price || "N/A"}
                       </div>
                       <button
                         onClick={e => e.preventDefault()}
@@ -228,11 +192,11 @@ export default function HomePage({ properties: initialProperties = [], total: in
                     <div style={{ padding: "12px" }}>
                       <div style={{ fontSize: 13, fontWeight: 700, color: "#1a1a1a", marginBottom: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{prop.title}</div>
                       <div style={{ fontSize: 12, color: "#555", marginBottom: 4 }}>
-                        In <strong>{prop.location}</strong>, {prop.city}
+                        <strong>{prop.locality}</strong>, Vijayawada
                       </div>
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "#999" }}>
-                        <span>By {prop.agent || "Agent"}</span>
-                        <span>{prop.area} sqft</span>
+                        <span>{prop.bedrooms ? `${prop.bedrooms} BHK` : "N/A"}</span>
+                        <span>{prop.area || "N/A"}</span>
                       </div>
                     </div>
                   </div>
@@ -248,77 +212,25 @@ export default function HomePage({ properties: initialProperties = [], total: in
             </div>
           </div>
 
-          {/* Commercial Spaces */}
+          {/* Property Types */}
           <div style={{ marginBottom: 32 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", marginBottom: 4 }}>Commercial Spaces and more</h2>
-            <p style={{ fontSize: 13, color: "#999", marginBottom: 20 }}>in Mumbai</p>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
-              {[
-                { type: "Shop", count: "3+ Properties", bg: "#fff5f0", idx: 4 },
-                { type: "Office Space", count: "7+ Properties", bg: "#f0f5ff", idx: 1 },
-                { type: "Bare Shell Office", count: "3+ Properties", bg: "#f0fff5", idx: 2 },
-              ].map(({ type, count, bg, idx }) => (
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a1a", marginBottom: 4 }}>Explore Property Types</h2>
+            <p style={{ fontSize: 13, color: "#999", marginBottom: 20 }}>in Vijayawada</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 16 }}>
+              {propertyTypes.slice(0, 4).map((type) => (
                 <Link key={type} href={`/listings?type=${encodeURIComponent(type)}`} style={{ textDecoration: "none" }}>
-                  <div style={{ background: bg, borderRadius: 10, overflow: "hidden", border: "1px solid #e8e8e8", height: 200, position: "relative" }}>
-                    <div style={{ padding: "20px 16px", position: "relative", zIndex: 1 }}>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: "#1a1a2e", marginBottom: 4, lineHeight: 1.2 }}>{type}</div>
-                      <div style={{ fontSize: 13, color: "#717171" }}>{count}</div>
-                    </div>
-                    <img
-                      src={IMGS[idx]}
-                      alt={type}
-                      style={{ position: "absolute", bottom: 0, right: 0, width: "60%", height: "75%", objectFit: "cover", opacity: 0.7, borderRadius: "10px 0 10px 0" }}
-                      onError={e => { e.target.style.display = "none"; }}
-                    />
+                  <div style={{ background: "white", borderRadius: 10, overflow: "hidden", border: "1px solid #e8e8e8", p: "20px 16px", height: 120, display: "flex", alignItems: "center", justifyContent: "center", textAlign: "center", cursor: "pointer", transition: "border-color 0.2s" }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#1a1a2e" }}>{type}</div>
                   </div>
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* Browse by Budget */}
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1.8fr", gap: 0, background: "#fff8f0", borderRadius: 12, overflow: "hidden", border: "1px solid #e8e8e8" }}>
-              <div style={{ padding: "32px 24px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
-                <div style={{ display: "flex", gap: 8, marginBottom: 16, alignItems: "flex-end" }}>
-                  <div style={{ width: 8, background: "#f0b429", borderRadius: 4, height: 36 }} />
-                  <div style={{ width: 8, background: "#f0b429", borderRadius: 4, height: 52, opacity: 0.7 }} />
-                  <svg width="40" height="52" viewBox="0 0 24 24" fill="#4A90D9" stroke="none">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a2e", lineHeight: 1.2 }}>Have a budget in mind?</h3>
-              </div>
-              <div style={{ background: "white", padding: "24px", borderLeft: "1px solid #f0e8e0" }}>
-                <h3 style={{ fontSize: 18, fontWeight: 800, color: "#1a1a2e", marginBottom: 4 }}>Browse by budget</h3>
-                <p style={{ fontSize: 13, color: "#999", marginBottom: 16 }}>Project options based on your budget</p>
-                {[
-                  { label: "Affordable projects", sub: "< ₹ 50 L", href: "/listings?maxPrice=5000000", icon: "₹" },
-                  { label: "Mid-Segment projects", sub: "₹ 50 L – 2 Cr", href: "/listings?minPrice=5000000&maxPrice=20000000", icon: "₹₹" },
-                  { label: "Luxury projects", sub: "> ₹ 2 Cr", href: "/listings?minPrice=20000000", icon: "₹₹₹" },
-                ].map(({ label, sub, href, icon }) => (
-                  <Link key={label} href={href} style={{ textDecoration: "none" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14, padding: "10px 12px", borderRadius: 8, marginBottom: 8, cursor: "pointer", transition: "background 0.2s", border: "1px solid #f0f0f0", background: "white" }}>
-                      <div style={{ width: 44, height: 44, background: "#e8f5e9", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#00897B", flexShrink: 0 }}>{icon}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>{label}</div>
-                        <div style={{ fontSize: 12, color: "#999" }}>{sub}</div>
-                      </div>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2">
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
-                      </svg>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
-
           {/* High Demand Localities */}
           <div style={{ marginBottom: 32 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a2e", marginBottom: 4 }}>Browse in High Demand Localities</h2>
-            <p style={{ fontSize: 13, color: "#999", marginBottom: 20 }}>in Mumbai</p>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: "#1a1a2e", marginBottom: 4 }}>Explore Localities</h2>
+            <p style={{ fontSize: 13, color: "#999", marginBottom: 20 }}>in Vijayawada</p>
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
               {localities.map(l => (
                 <Link key={l} href={`/listings?search=${encodeURIComponent(l)}`} style={{ textDecoration: "none" }}>
@@ -343,13 +255,11 @@ export default function HomePage({ properties: initialProperties = [], total: in
                   </svg>
                 </div>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>Guest User</div>
-                  <div style={{ fontSize: 12, color: "#999" }}>Your Recent Activity</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#1a1a2e" }}>Welcome to REALTA</div>
+                  <div style={{ fontSize: 12, color: "#999" }}>Vijayawada Real Estate</div>
                 </div>
               </div>
-              <p style={{ fontSize: 13, color: "#999", marginBottom: 16, lineHeight: 1.5 }}>
-                No activity yet! Start browsing properties and projects to track from here.
-              </p>
+              <p style={{ fontSize: 13, color: "#999", marginBottom: 16, lineHeight: 1.5 }}>Explore premium properties across Vijayawada's best localities.</p>
               <Link href="/login" style={{ textDecoration: "none" }}>
                 <button style={{ width: "100%", background: "#E03A3C", border: "none", color: "white", padding: "12px", borderRadius: 6, fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
                   LOGIN / REGISTER
@@ -424,7 +334,7 @@ export default function HomePage({ properties: initialProperties = [], total: in
             <div>
               <div style={{ fontSize: 22, fontWeight: 800, color: "#E03A3C", marginBottom: 10 }}>REALTA</div>
               <p style={{ fontSize: 13, color: "#888", lineHeight: 1.7, maxWidth: 260 }}>
-                Mumbai's trusted commercial real estate platform. Curated shops and office spaces across prime business districts.
+                Vijayawada's trusted residential real estate platform. Curated apartments and plots across prime residential areas.
               </p>
             </div>
 
@@ -473,7 +383,7 @@ export default function HomePage({ properties: initialProperties = [], total: in
 
           <div style={{ borderTop: "1px solid #2a2a3e", paddingTop: 16, display: "flex", justifyContent: "space-between", fontSize: 12, color: "#555" }}>
             <span>© 2026 REALTA. All rights reserved.</span>
-            <span>Mumbai Commercial Real Estate Platform</span>
+            <span>Vijayawada Residential Real Estate Platform</span>
           </div>
         </div>
       </footer>

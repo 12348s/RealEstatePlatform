@@ -1,115 +1,366 @@
-# 🏠 REALTA - Real Estate Platform
+# RealEstatePlatform
 
-A modern, full-featured real estate platform built with Next.js 14, featuring user authentication, property management, admin dashboard, and agent tools.
+A comprehensive real estate platform built with Next.js, featuring property listings, user authentication, agent management, and a monetized contact system.
 
-![Next.js](https://img.shields.io/badge/Next.js-14.0-black)
-![React](https://img.shields.io/badge/React-18.0-blue)
-![Prisma](https://img.shields.io/badge/Prisma-5.0-green)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15.0-blue)
-![NextAuth.js](https://img.shields.io/badge/NextAuth.js-4.0-orange)
+## 🚀 Features
 
----
+### Core Functionality
+- **Property Listings**: Browse, search, and filter properties by type, location, price, and status
+- **User Authentication**: Separate login portals for buyers, agents, and admins
+- **Agent Dashboard**: Manage properties, view inquiries, and reply to potential buyers
+- **Admin Dashboard**: Full platform management including user/property oversight
+- **Saved Properties**: Users can save favorite listings for later
+- **Inquiry System**: Buyers can contact agents through a paid contact flow
 
-## ✨ Features
+### Monetization Features
+- **Paid Contact System**: Buyers must pay to unlock agent contact details
+- **Mock Payment Processing**: Secure demo payment flow with card validation
+- **Plan-Based Access**: Basic and Premium contact plans with different features
 
-### 🏢 Property Management
-- **Property Listings** — Browse, search, and filter properties
-- **Property Details** — Comprehensive property information with images
-- **Property Addition** — Agents can add new listings
-- **Image Gallery** — Dynamic property image display with fallbacks
+### Advanced Features
+- **Role-Based Access Control**: Different dashboards and permissions for buyers, agents, and admins
+- **Responsive Design**: Mobile-friendly interface with modern UI
+- **Real-time Updates**: Instant UI updates for actions like deleting properties
+- **Data Seeding**: Pre-populated with sample properties and users
 
-### 👥 User Management
-- **Role-Based Access** — Buyer, Agent, and Admin roles
-- **Authentication** — Secure login/registration with NextAuth.js
-- **Profile Management** — User profiles and preferences
+## 🛠 Tech Stack
 
-### 🛡️ Admin Dashboard
-- **Platform Statistics** — Total properties, users, and inquiries
-- **User Management** — View and manage all users
-- **Property Oversight** — Monitor and delete listings
-- **Inquiry Management** — Handle property inquiries
+### Frontend
+- **Next.js 14** - React framework with App Router
+- **React** - UI library with hooks and client components
+- **CSS-in-JS** - Inline styling for components
 
-### 🏢 Agent Features
-- **Dashboard** — Manage personal listings and inquiries
-- **Advertising Plans** — Premium subscription plans for visibility
-- **Lead Management** — Track property inquiries
+### Backend
+- **Next.js API Routes** - Serverless API endpoints
+- **MongoDB** - NoSQL database
+- **Mongoose** - MongoDB object modeling
 
-### 💰 Advertising System
-- **Tiered Plans** — Basic, Professional, and Enterprise plans
-- **Subscription Management** — Role-based access control
-- **Payment Integration** — Ready for payment gateway integration
+### Authentication
+- **NextAuth.js** - Authentication library with credentials provider
+- **JWT** - JSON Web Tokens for session management
 
----
-
-## 🚀 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | Next.js 14 (App Router), React 18, Tailwind CSS |
-| Backend | Next.js API Routes, Prisma ORM |
-| Database | PostgreSQL |
-| Authentication | NextAuth.js with Credentials Provider |
-| Maps | Leaflet.js (interactive maps) |
-| Fonts | Plus Jakarta Sans (Google Fonts) |
-| Styling | Inline CSS with responsive design |
-| Deployment | Vercel / Netlify ready |
-
----
+### Development Tools
+- **Node.js** - JavaScript runtime
+- **npm** - Package manager
+- **ESLint** - Code linting
 
 ## 📋 Prerequisites
 
 - Node.js 18+
-- PostgreSQL database
-- Git
+- MongoDB (local or cloud instance)
+- npm or yarn
+
+## 🚀 Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd RealEstatePlatform
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Setup**
+   - Copy `.env.example` to `.env`
+   - Fill in your MongoDB connection string and NextAuth secret:
+   ```env
+   MONGODB_URI=mongodb://localhost:27017/realestate
+   NEXTAUTH_SECRET=your-secret-key-here
+   NEXTAUTH_URL=http://localhost:3000
+   ```
+
+4. **Database Setup**
+   - Ensure MongoDB is running
+   - Seed the database with sample data:
+   ```bash
+   npm run db:seed
+   ```
+
+5. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+   Visit `http://localhost:3000` to view the application.
+
+## 📁 Project Structure
+
+```
+RealEstatePlatform/
+├── app/                          # Next.js App Router
+│   ├── layout.js                 # Root layout
+│   ├── page.js                   # Homepage
+│   ├── login/                    # Buyer login page
+│   ├── agent-login/              # Agent login page
+│   ├── admin-login/              # Admin login page
+│   ├── register/                 # Agent registration
+│   ├── listings/                 # Property listings
+│   ├── property/[id]/            # Property detail pages
+│   ├── dashboard/                # User dashboard
+│   ├── agent-dashboard/          # Agent dashboard
+│   ├── admin/                    # Admin dashboard
+│   └── api/                      # API routes
+│       ├── auth/                 # Authentication
+│       ├── properties/           # Property CRUD
+│       ├── inquiries/            # Inquiry management
+│       ├── register/             # User registration
+│       └── admin/                # Admin operations
+├── components/                   # Reusable React components
+│   ├── Navbar.js                 # Navigation bar
+│   ├── PropertyCard.js           # Property listing card
+│   ├── ContactModal.js           # Paid contact flow
+│   ├── EMICalculator.js          # EMI calculation tool
+│   └── PropertyImages.js         # Image gallery
+├── lib/                          # Utility libraries
+│   ├── mongodb.js                # MongoDB connection
+│   └── constants.js              # App constants
+├── models/                       # Mongoose schemas
+│   ├── User.js                   # User model
+│   ├── Property.js               # Property model
+│   ├── Inquiry.js                # Inquiry model
+│   └── SavedProperty.js          # Saved property model
+├── scripts/                      # Utility scripts
+│   └── seed-mongo.js             # Database seeding
+├── prisma/                       # Legacy Prisma (migrated to MongoDB)
+└── public/                       # Static assets
+```
+
+## 🔧 API Endpoints
+
+### Authentication
+- `POST /api/auth/[...nextauth]` - NextAuth handler
+- `POST /api/register` - User registration
+
+### Properties
+- `GET /api/properties` - Get all properties (with pagination)
+- `GET /api/properties/[id]` - Get single property
+- `POST /api/properties` - Create property (agents/admins)
+- `PUT /api/properties/[id]` - Update property (agents/admins)
+- `DELETE /api/properties/[id]` - Delete property (admins)
+
+### Inquiries
+- `GET /api/inquiries` - Get inquiries (filtered by user role)
+- `GET /api/inquiries/[id]` - Get single inquiry
+- `POST /api/inquiries` - Create inquiry
+- `PUT /api/inquiries/[id]` - Update inquiry
+- `DELETE /api/inquiries/[id]` - Delete inquiry
+- `POST /api/inquiries/[id]/reply` - Reply to inquiry (agents)
+
+### Saved Properties
+- `GET /api/saved-properties` - Get user's saved properties
+- `POST /api/saved-properties` - Save property
+- `DELETE /api/saved-properties` - Remove saved property
+
+### Admin
+- `GET /api/admin/stats` - Platform statistics
+- `GET /api/admin/users` - All users
+- `DELETE /api/admin/users/[email]` - Delete user
+
+## 🗄 Database Schema
+
+### User Model
+```javascript
+{
+  name: String,
+  email: String,
+  password: String, // hashed
+  role: String, // 'buyer', 'agent', 'admin'
+  phone: String, // agents only
+  agentName: String, // agents only
+  agentBio: String, // agents only
+  createdAt: Date
+}
+```
+
+### Property Model
+```javascript
+{
+  id: String, // scraped ID
+  title: String,
+  property_name: String,
+  type: String,
+  price: String,
+  price_per_sqft: String,
+  min_price: Number,
+  max_price: Number,
+  locality: String,
+  city: String,
+  state: String,
+  status: String, // 'available', 'sold'
+  agent: String, // agent email
+  images: [String],
+  features: Object,
+  createdAt: Date
+}
+```
+
+### Inquiry Model
+```javascript
+{
+  message: String,
+  propertyId: String,
+  buyerEmail: String,
+  agentEmail: String,
+  status: String, // 'pending', 'replied'
+  replies: [{
+    message: String,
+    from: String, // 'buyer' or 'agent'
+    createdAt: Date
+  }],
+  createdAt: Date
+}
+```
+
+## 🎯 Usage
+
+### For Buyers
+1. Browse properties on the homepage or listings page
+2. Use filters to find specific properties
+3. Save favorite properties to your dashboard
+4. Contact agents through the paid contact system
+
+### For Agents
+1. Register as an agent or login to agent portal
+2. Add and manage your properties
+3. View and reply to buyer inquiries
+4. Access agent-specific dashboard features
+
+### For Admins
+1. Login to admin portal
+2. View platform statistics
+3. Manage all users and properties
+4. Delete inappropriate content
+
+## 🔐 Authentication Flow
+
+The platform uses role-based authentication with separate login pages:
+
+- **Buyers**: `/login` → redirected to `/listings`
+- **Agents**: `/agent-login` → redirected to `/agent-dashboard`
+- **Admins**: `/admin-login` → redirected to `/admin`
+
+Registration is available at `/register` for new agents.
+
+## 💳 Payment System
+
+The contact system requires payment before revealing agent details:
+
+- **Basic Plan**: ₹99 - Phone number only
+- **Premium Plan**: ₹299 - Phone + WhatsApp + priority support
+
+Payment is mocked - no real transactions occur.
+
+## 📱 Responsive Design
+
+The application is fully responsive and works on:
+- Desktop computers
+- Tablets
+- Mobile phones
+
+## 🧪 Testing
+
+Run the development server and test features:
+- User registration and login
+- Property browsing and filtering
+- Contact flow and payment simulation
+- Dashboard functionalities
+- Admin operations
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For issues or questions:
+- Check the existing issues on GitHub
+- Create a new issue with detailed description
+- Include error messages and steps to reproduce
 
 ---
 
-## 🛠️ Installation
+Built with ❤️ using Next.js and MongoDB
 
-### 1. Clone the repository
-```bash
-git clone https://github.com/YOUR_USERNAME/RealEstatePlatform.git
-cd RealEstatePlatform
+Or just drag-and-drop the folders in VS Code.
+
+### 2. Place final_merged.json in the project root
+
+```
+RealEstatePlatform/
+├── final_merged.json   ← put it here
+├── app/
+├── lib/
+...
 ```
 
-### 2. Install dependencies
+### 3. Set up your .env
+
+```bash
+cd RealEstatePlatform
+cp .env.example .env
+```
+
+Then edit `.env`:
+
+**Option A — Local MongoDB (no account needed):**
+```
+MONGODB_URI="mongodb://localhost:27017/real_estate_db"
+```
+Install MongoDB locally: https://www.mongodb.com/try/download/community
+
+**Option B — MongoDB Atlas (free cloud):**
+```
+MONGODB_URI="mongodb+srv://<user>:<pass>@cluster0.xxxxx.mongodb.net/real_estate_db"
+```
+Sign up free at: https://www.mongodb.com/cloud/atlas
+
+Generate your NEXTAUTH_SECRET:
+```bash
+openssl rand -base64 32
+```
+
+### 4. Install dependencies
+
 ```bash
 npm install
 ```
 
-### 3. Set up environment variables
+This installs mongoose and removes the need for prisma.
+
+### 5. Seed the database
+
 ```bash
-cp .env.example .env
+npm run db:seed
 ```
 
-Edit `.env` with your configuration:
-```env
-DATABASE_URL="postgresql://username:password@localhost:5432/real_estate_db"
-NEXTAUTH_SECRET="your-secret-key-here"
-NEXTAUTH_URL="http://localhost:3000"
-```
+This will:
+- Clear any existing data
+- Create 3 default users (admin, buyer, agent)
+- Import all 934 properties from final_merged.json
+- Create a sample inquiry
 
-### 4. Set up the database
-```bash
-npx prisma generate
-npx prisma db push
-```
+### 6. Run the app
 
-### 5. Seed the database (optional)
-```bash
-npx prisma db seed
-```
-
-### 6. Start the development server
 ```bash
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000)
+Visit http://localhost:3000
 
 ---
 
-## 🔑 Login Credentials (after seeding)
+## Login credentials (after seeding)
 
 | Role  | Email             | Password  |
 |-------|-------------------|-----------|
@@ -119,200 +370,21 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ---
 
-## 📁 Project Structure
+## Delete Prisma (optional cleanup)
 
-```
-RealEstatePlatform/
-├── app/                        # Next.js App Router
-│   ├── admin/                  # Admin dashboard
-│   ├── agent-dashboard/        # Agent dashboard
-│   ├── advertise/              # Advertising plans
-│   ├── api/                    # API routes
-│   │   ├── admin/              # Admin API endpoints
-│   │   ├── auth/               # Authentication
-│   │   ├── properties/         # Property management
-│   │   └── register/           # User registration
-│   ├── listings/               # Property listings page
-│   ├── login/                  # Login page
-│   └── property/               # Individual property pages
-├── components/                 # React components
-│   ├── Navbar.js               # Navigation component
-│   ├── PropertyCard.js         # Property listing card
-│   ├── PropertyImages.js       # Image gallery component
-│   └── ...
-├── lib/                        # Utility libraries
-│   ├── prisma.js               # Database client
-│   └── constants.js            # App constants
-├── prisma/                     # Database schema
-│   └── schema.prisma           # Prisma schema
-├── public/                     # Static assets
-├── scripts/                    # Utility scripts
-└── package.json                # Dependencies
-```
+Once everything works, you can remove Prisma entirely:
 
----
-
-## 📄 Pages
-
-| Route | Description |
-|-------|-------------|
-| `/` | Homepage with search and featured properties |
-| `/listings` | All properties with filters + map view |
-| `/property/[id]` | Property detail with EMI calculator |
-| `/admin` | Admin dashboard (admin only) |
-| `/login` | Login / Register |
-
----
-
-## 🔌 API Routes
-
-| Method | Route | Description |
-|--------|-------|-------------|
-| GET | `/api/properties` | List with filters |
-| POST | `/api/properties` | Add property (admin) |
-| GET | `/api/properties/:id` | Single property |
-| PUT | `/api/properties/:id` | Update (admin) |
-| DELETE | `/api/properties/:id` | Delete (admin) |
-| POST | `/api/inquiries` | Send inquiry |
-| GET | `/api/inquiries` | List inquiries |
-| POST | `/api/register` | Register user |
-| GET | `/api/admin/stats` | Dashboard stats |
-
----
-
-## 🔐 User Roles & Permissions
-
-### 👤 Buyer (Default)
-- Browse and search properties
-- View property details
-- Contact agents via inquiry form
-- Save favourite properties
-
-### 🏢 Agent (`@realty.com` emails)
-- All buyer permissions
-- Add new property listings
-- Manage personal listings
-- Access agent dashboard
-- Subscribe to advertising plans
-
-### 👑 Admin
-- All agent permissions
-- Access admin dashboard
-- View platform statistics
-- Manage all users and properties
-- Delete inappropriate content
-
----
-
-## 🗄️ Database Schema
-
-### User Model
-```prisma
-model User {
-  id        String   @id @default(cuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      String   @default("buyer") // buyer | agent | admin
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-```
-
-### Property Model
-```prisma
-model Property {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  price       Float
-  location    String
-  bedrooms    Int?
-  bathrooms   Int?
-  area        Float?
-  type        String   // residential | commercial
-  status      String   @default("available")
-  images      String[] // Array of image URLs
-  agentId     String
-  agent       User     @relation(fields: [agentId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-```
-
-### Inquiry Model
-```prisma
-model Inquiry {
-  id         String   @id @default(cuid())
-  name       String
-  email      String
-  phone      String?
-  message    String
-  propertyId String
-  property   Property @relation(fields: [propertyId], references: [id])
-  createdAt  DateTime @default(now())
-}
-```
-
----
-
-## 🔧 Available Scripts
-
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run db:push` | Push schema changes to database |
-| `npm run db:seed` | Seed database with sample data |
-| `npx prisma studio` | Open Prisma Studio |
-| `npx prisma generate` | Generate Prisma client |
-
----
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Connect your GitHub repository to Vercel
-2. Add environment variables in the Vercel dashboard
-3. Deploy automatically on every push
-
-### Manual Deployment
-1. Build the application: `npm run build`
-2. Start production server: `npm run start`
-3. Configure reverse proxy (nginx / apache)
-
----
-
-## 📦 Import Your Scraped Data
-
-Place `housing_data.json` in the root folder and run:
 ```bash
-npm run db:seed
+npm uninstall @prisma/client prisma
+rm -rf prisma/
 ```
-The seed script auto-detects and imports your JSON file.
 
 ---
 
-## 🤝 Contributing
+## Notes
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Commit your changes: `git commit -m 'Add feature'`
-4. Push to the branch: `git push origin feature-name`
-5. Open a Pull Request
-
----
-
-
-## 🙏 Acknowledgments
-
-- Built with [Next.js](https://nextjs.org/)
-- Authentication powered by [NextAuth.js](https://next-auth.js.org/)
-- Database ORM by [Prisma](https://prisma.io/)
-- UI components inspired by modern real estate platforms like 99acres / MagicBricks
-
----
-
-**Made with ❤️ by Neha Chinnam**
+- Properties from final_merged.json keep their original `id` field (e.g. "P89075154").
+  Property detail URLs use this ID: `/property/P89075154`
+- Manually added properties (by agents/admin) use MongoDB's `_id`.
+  The API handles both transparently.
+- The `prisma/` folder can stay — it won't cause errors, it's just unused.

@@ -1,134 +1,150 @@
 "use client";
 // app/listings/page.js
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { Suspense } from "react";
+import { APIProvider, Map, Marker, InfoWindow } from "@vis.gl/react-google-maps";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import PropertyCard from "@/components/PropertyCard";
-import { fmtPrice, getImg, getRisk, getAge } from "@/lib/constants";
+import { fmtPrice, getImageSrc, getRisk, getAge } from "@/lib/constants";
 
-// ── Leaflet Map ───────────────────────────────────────────────────────────
+const PROPERTY_TYPES = [
+  { value: "", label: "All Types" },
+  { value: "Residential Apartment", label: "Residential Apartment" },
+  { value: "Builder Floor", label: "Builder Floor" },
+  { value: "Farm House", label: "Farm House" },
+  { value: "Serviced Apartments", label: "Serviced Apartments" },
+  { value: "Independent House/Villa", label: "Independent House/Villa" },
+  { value: "Residential Land", label: "Residential Land" },
+  { value: "Other", label: "Other" },
+];
+
+const BHK_OPTIONS = [
+  { value: "", label: "Any" },
+  { value: "1", label: "1 BHK" },
+  { value: "2", label: "2 BHK" },
+  { value: "3", label: "3 BHK" },
+  { value: "4", label: "4 BHK" },
+  { value: "5+", label: "5+ BHK" },
+];
+
+const SORT_OPTIONS = [
+  { label: "Newest", sortBy: "createdAt", sortOrder: "desc" },
+  { label: "Price: Low to High", sortBy: "price", sortOrder: "asc" },
+  { label: "Price: High to Low", sortBy: "price", sortOrder: "desc" },
+];
+
+// ── Google Map ───────────────────────────────────────────────────────────
 function MapView({ properties }) {
-  const mapRef = useRef(null);
-  const mapInstanceRef = useRef(null);
-  const markersRef = useRef([]);
+  const [selected, setSelected] = useState(null);
+  const VIJAYAWADA = { lat: 16.5062, lng: 80.6480 };
 
-  const MUMBAI_COORDS = {
-    "Dahisar East":   [19.2515, 72.8681],
-    "Lower Parel":    [18.9978, 72.8282],
-    "Dahisar West":   [19.2558, 72.8530],
-    "Andheri West":   [19.1364, 72.8296],
-    "Ghatkopar West": [19.0913, 72.9050],
-    "Borivali East":  [19.2264, 72.8650],
-    "Borivali West":  [19.2332, 72.8416],
-    "Malad East":     [19.1824, 72.8641],
-  };
-
-  useEffect(() => {
-    if (!document.querySelector("#leaflet-css")) {
-      const l = document.createElement("link");
-      l.id = "leaflet-css"; l.rel = "stylesheet";
-      l.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-      document.head.appendChild(l);
-    }
-
-    const init = async () => {
-      if (!window.L) {
-        await new Promise(resolve => {
-          const s = document.createElement("script");
-          s.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-          s.onload = resolve;
-          document.head.appendChild(s);
-        });
-      }
-      if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; }
-      if (!mapRef.current) return;
-
-      const L = window.L;
-      const map = L.map(mapRef.current, { zoomControl: false }).setView([19.15, 72.87], 11);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-        attribution: "© OpenStreetMap © CARTO", subdomains: "abcd", maxZoom: 19,
-      }).addTo(map);
-      L.control.zoom({ position: "bottomright" }).addTo(map);
-      mapInstanceRef.current = map;
-      addMarkers(properties, map);
-    };
-
-    init();
-    return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
-  }, []);
-
-  const addMarkers = (props, map) => {
-    if (!window.L || !map) return;
-    const L = window.L;
-    markersRef.current.forEach(m => { try { m.remove(); } catch(e) {} });
-    markersRef.current = [];
-
-    props.forEach((prop, i) => {
-      const base = MUMBAI_COORDS[prop.location] || [19.076 + (Math.random()-0.5)*0.1, 72.877 + (Math.random()-0.5)*0.1];
-      const lat = base[0] + (i * 0.003);
-      const lng = base[1] + (i * 0.002);
-
-      const icon = L.divIcon({
-        className: "",
-        html: `<div style="background:#E03A3C;color:white;padding:5px 10px;border-radius:6px;font-family:'Plus Jakarta Sans',sans-serif;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 3px 12px rgba(224,58,60,0.4);cursor:pointer;">${fmtPrice(prop.price)}</div>`,
-        iconAnchor: [30, 14],
-      });
-
-      const marker = L.marker([lat, lng], { icon })
-        .addTo(map)
-        .on("click", () => { window.location.href = `/property/${prop.id}`; });
-
-      marker.bindPopup(`
-        <div style="font-family:'Plus Jakarta Sans',sans-serif;min-width:180px;padding:4px;">
-          <img src="${prop.imageUrl || getImg(prop.id)}" onerror="this.src='https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=300'" style="width:100%;height:80px;object-fit:cover;border-radius:6px;margin-bottom:8px;display:block;"/>
-          <div style="font-weight:700;font-size:13px;color:#1A1A1A;margin-bottom:2px;">${fmtPrice(prop.price)}</div>
-          <div style="font-size:12px;color:#1A1A1A;margin-bottom:2px;">${prop.title}</div>
-          <div style="font-size:11px;color:#717171;">${prop.location}, ${prop.city}</div>
-          <a href="/property/${prop.id}" style="display:block;margin-top:8px;background:#E03A3C;color:white;text-align:center;padding:6px;border-radius:4px;text-decoration:none;font-size:12px;font-weight:700;">View Details</a>
-        </div>
-      `, { maxWidth: 220 });
-
-      markersRef.current.push(marker);
-    });
-  };
-
-  useEffect(() => {
-    if (window.L && mapInstanceRef.current) addMarkers(properties, mapInstanceRef.current);
-  }, [properties]);
+  const validProps = (properties || []).filter(p =>
+    p.latitude && p.longitude &&
+    !isNaN(parseFloat(p.latitude)) &&
+    !isNaN(parseFloat(p.longitude))
+  );
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
-      <style>{`.leaflet-container{background:#f0efe9!important}.leaflet-popup-content-wrapper{border-radius:10px!important;border:1px solid #E0E0E0!important;box-shadow:0 8px 32px rgba(0,0,0,0.1)!important}.leaflet-popup-tip{display:none}`}</style>
-    </div>
+    <APIProvider apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}>
+      <Map
+        defaultCenter={VIJAYAWADA}
+        defaultZoom={12}
+        style={{ width: "100%", height: "100%" }}
+        gestureHandling="greedy"
+      >
+        {validProps.map((p) => {
+          const lat = parseFloat(p.latitude);
+          const lng = parseFloat(p.longitude);
+          const price = p.price || "N/A";
+
+          return (
+            <Marker
+              key={p.id || p._id}
+              position={{ lat, lng }}
+              onClick={() => setSelected(p)}
+            />
+          );
+        })}
+
+        {selected && (
+          <InfoWindow
+            position={{
+              lat: parseFloat(selected.latitude),
+              lng: parseFloat(selected.longitude),
+            }}
+            onCloseClick={() => setSelected(null)}
+          >
+            <div style={{ fontFamily: "sans-serif", maxWidth: 220, padding: 6 }}>
+              <img
+                src={selected.images?.[0]
+                  ? `https://images.weserv.nl/?url=${encodeURIComponent(selected.images[0])}&w=200&q=80`
+                  : "/placeholder.jpg"}
+                alt={selected.title}
+                style={{ width: "100%", height: 110, objectFit: "cover", borderRadius: 6, marginBottom: 8 }}
+                onError={(e) => { e.target.src = "/placeholder.jpg"; }}
+              />
+              <div style={{ fontWeight: 700, fontSize: 14, color: "#E03A3C", marginBottom: 2 }}>
+                ₹{selected.price || "Price on request"}
+              </div>
+              <div style={{ fontWeight: 600, fontSize: 13, color: "#1a1a1a", marginBottom: 4 }}>
+                {selected.title}
+              </div>
+              <div style={{ fontSize: 12, color: "#666", marginBottom: 8 }}>
+                {selected.locality}, Vijayawada
+              </div>
+              <a
+                href={`/property/${selected.id || selected._id}`}
+                style={{
+                  display: "block",
+                  background: "#E03A3C",
+                  color: "white",
+                  textAlign: "center",
+                  padding: "6px 0",
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                View Details →
+              </a>
+            </div>
+          </InfoWindow>
+        )}
+      </Map>
+    </APIProvider>
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────
-export default function ListingsPage() {
+// ── Main Page Content ─────────────────────────────────────────────────────────
+function ListingsPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [properties, setProperties] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, pages: 1 });
+  const [currentPage, setCurrentPage] = useState(parseInt(searchParams.get("page")) || 1);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState("list");
   const [showMap, setShowMap] = useState(false);
   const [filters, setFilters] = useState({
-    search:   searchParams.get("search")  || "",
-    type:     searchParams.get("type")    || "",
-    listing:  searchParams.get("listing") || "",
-    minPrice: searchParams.get("minPrice")|| "",
-    maxPrice: searchParams.get("maxPrice")|| "",
+    search:   searchParams.get("search")   || "",
+    type:     searchParams.get("type")     || "",
+    listing:  searchParams.get("listing") ||
+              (searchParams.get("listing_type") === "P" ? "Buy" : searchParams.get("listing_type") === "R" ? "Rent" : "") || "",
+    bedrooms: searchParams.get("bedrooms") || "",
+    minPrice: searchParams.get("minPrice") || "",
+    maxPrice: searchParams.get("maxPrice") || "",
     sortBy:   "createdAt",
     sortOrder:"desc",
-    page:     1,
   });
 
   const fetchProperties = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
+    params.set("page", String(currentPage));
     params.set("limit", "20");
     try {
       const res = await fetch(`/api/properties?${params}`);
@@ -137,12 +153,29 @@ export default function ListingsPage() {
       setPagination(data.pagination || { total: 0, pages: 1 });
     } catch(e) { console.error(e); }
     setLoading(false);
-  }, [filters]);
+  }, [filters, currentPage]);
 
   useEffect(() => { fetchProperties(); }, [fetchProperties]);
 
-  const setFilter = (k, v) => setFilters(f => ({ ...f, [k]: v, page: 1 }));
-  const clearFilters = () => setFilters({ search: "", type: "", listing: "", minPrice: "", maxPrice: "", sortBy: "createdAt", sortOrder: "desc", page: 1 });
+  const setFilter = (k, v) => setFilters(f => {
+    const next = { ...f, [k]: v };
+    if (k !== "page") {
+      setCurrentPage(1);
+    }
+    if (k === "type" && (v === "Residential Land" || v === "Farm House")) {
+      next.bedrooms = "";
+    }
+    return next;
+  });
+  const clearFilters = () => {
+    setCurrentPage(1);
+    return setFilters({ search: "", type: "", listing: "", bedrooms: "", minPrice: "", maxPrice: "", sortBy: "createdAt", sortOrder: "desc" });
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const inp = { border: "1px solid #E0E0E0", borderRadius: 6, padding: "8px 12px", fontSize: 13, fontFamily: "inherit", outline: "none", background: "white", color: "#1A1A1A", width: "100%" };
 
@@ -172,10 +205,10 @@ export default function ListingsPage() {
             />
             {filters.search && <button onClick={() => setFilter("search", "")} style={{ border: "none", background: "none", cursor: "pointer", color: "#aaa", fontSize: 18, lineHeight: 1 }}>×</button>}
           </div>
-          <select className="filter-input" style={{ ...inp, width: 160 }} value={filters.type} onChange={e => setFilter("type", e.target.value)}>
-            <option value="">All Types</option>
-            <option value="Shop">Shop</option>
-            <option value="Office Space">Office Space</option>
+          <select className="filter-input" style={{ ...inp, width: 260 }} value={filters.type} onChange={e => setFilter("type", e.target.value)}>
+            {PROPERTY_TYPES.map(({ value, label }) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
           <select className="filter-input" style={{ ...inp, width: 140 }} value={filters.listing} onChange={e => setFilter("listing", e.target.value)}>
             <option value="">Buy & Rent</option>
@@ -214,13 +247,24 @@ export default function ListingsPage() {
               {/* Property type */}
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#717171", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>Property Type</div>
-                {[["", "All Types"], ["Shop", "Shop"], ["Office Space", "Office Space"]].map(([v, l]) => (
-                  <label key={v} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, cursor: "pointer" }}>
-                    <input type="radio" name="type" checked={filters.type === v} onChange={() => setFilter("type", v)} style={{ accentColor: "#E03A3C" }} />
-                    <span style={{ fontSize: 13, color: "#1A1A1A" }}>{l}</span>
+                {PROPERTY_TYPES.map(({ value, label }) => (
+                  <label key={value} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, cursor: "pointer" }}>
+                    <input type="radio" name="type" checked={filters.type === value} onChange={() => setFilter("type", value)} style={{ accentColor: "#E03A3C" }} />
+                    <span style={{ fontSize: 13, color: "#1A1A1A" }}>{label}</span>
                   </label>
                 ))}
               </div>
+              {filters.type !== "Residential Land" && filters.type !== "Farm House" && (
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#717171", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>BHK</div>
+                  {BHK_OPTIONS.map(({ value, label }) => (
+                    <label key={value} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, cursor: "pointer" }}>
+                      <input type="radio" name="bedrooms" checked={filters.bedrooms === value} onChange={() => setFilter("bedrooms", value)} style={{ accentColor: "#E03A3C" }} />
+                      <span style={{ fontSize: 13, color: "#1A1A1A" }}>{label}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
 
               {/* Listing type */}
               <div style={{ marginBottom: 20 }}>
@@ -268,9 +312,18 @@ export default function ListingsPage() {
             <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
               <div style={{ display: "flex", gap: 4 }}>
                 <span style={{ fontSize: 13, color: "#717171" }}>Sort:</span>
-                <select style={{ border: "none", outline: "none", fontSize: 13, color: "#1A1A1A", fontFamily: "inherit", cursor: "pointer" }} value={filters.sortBy} onChange={e => setFilter("sortBy", e.target.value)}>
-                  <option value="createdAt">Newest</option>
-                  <option value="price">Price: Low to High</option>
+                <select
+                  style={{ border: "none", outline: "none", fontSize: 13, color: "#1A1A1A", fontFamily: "inherit", cursor: "pointer" }}
+                  value={`${filters.sortBy}|${filters.sortOrder}`}
+                  onChange={e => {
+                    const [sortBy, sortOrder] = e.target.value.split("|");
+                    setFilter("sortBy", sortBy);
+                    setFilter("sortOrder", sortOrder);
+                  }}
+                >
+                  {SORT_OPTIONS.map(({ label, sortBy, sortOrder }) => (
+                    <option key={`${sortBy}|${sortOrder}`} value={`${sortBy}|${sortOrder}`}>{label}</option>
+                  ))}
                 </select>
               </div>
               <div style={{ display: "flex", gap: 4, borderLeft: "1px solid #E0E0E0", paddingLeft: 12 }}>
@@ -310,9 +363,22 @@ export default function ListingsPage() {
           {/* Pagination */}
           {pagination.pages > 1 && (
             <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 32 }}>
-              {[...Array(pagination.pages)].map((_, i) => (
-                <button key={i} onClick={() => setFilter("page", i + 1)} style={{ background: filters.page === i + 1 ? "#E03A3C" : "white", color: filters.page === i + 1 ? "white" : "#1A1A1A", border: "1px solid #E0E0E0", borderRadius: 6, width: 36, height: 36, cursor: "pointer", fontFamily: "inherit", fontWeight: 600, fontSize: 13 }}>
-                  {i + 1}
+              {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  style={{
+                    padding: "8px 14px",
+                    borderRadius: 6,
+                    border: currentPage === page ? "none" : "1px solid #E0E0E0",
+                    background: currentPage === page ? "#E03A3C" : "white",
+                    color: currentPage === page ? "white" : "#1A1A1A",
+                    fontWeight: currentPage === page ? 700 : 400,
+                    cursor: "pointer",
+                    fontSize: 14,
+                  }}
+                >
+                  {page}
                 </button>
               ))}
             </div>
@@ -335,5 +401,25 @@ export default function ListingsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function ListingsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        minHeight: "100vh", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        fontFamily: "sans-serif",
+        color: "#999",
+        fontSize: 16,
+      }}>
+        Loading...
+      </div>
+    }>
+      <ListingsPageContent />
+    </Suspense>
   );
 }

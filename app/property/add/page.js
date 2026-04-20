@@ -73,7 +73,7 @@ export default function AddPropertyPage() {
       if (!response.ok) throw new Error("Failed to add property");
       
       const data = await response.json();
-      router.push(`/property/${data.id}`);
+      router.push(`/property/${data.id || data._id}`);
     } catch (error) {
       alert(error.message);
     } finally {

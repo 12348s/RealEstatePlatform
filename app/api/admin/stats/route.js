@@ -2,23 +2,43 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/authOptions";
-import { prisma } from "@/lib/prisma";
+
+export const dynamic = "force-dynamic";
+import { connectDB } from "@/lib/mongodb";
+import Property from "@/models/Property";
+import User from "@/models/User";
+import Inquiry from "@/models/Inquiry";
 
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user?.role !== "admin") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const [totalProperties, available, sold, totalUsers, inquiries, recentProperties] = await Promise.all([
-      prisma.property.count(),
-      prisma.property.count({ where: { status: "available" } }),
-      prisma.property.count({ where: { status: "sold" } }),
-      prisma.user.count(),
-      prisma.inquiry.count(),
-      prisma.property.findMany({ orderBy: { createdAt: "desc" }, take: 5 }),
-    ]);
-    const totalValue = await prisma.property.aggregate({ _sum: { price: true } });
-    return NextResponse.json({ totalProperties, available, sold, totalUsers, inquiries, totalValue: totalValue._sum.price || 0, recentProperties });
+    if (!session || session.user?.role !== "admin") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await connectDB();
+
+    const [totalProperties, available, sold, totalUsers, inquiries, recentProperties] =
+      await Promise.all([
+        Property.countDocuments(),
+        Property.countDocuments({ status: "available" }),
+        Property.countDocuments({ status: "sold" }),
+        User.countDocuments(),
+        Inquiry.countDocuments(),
+        Property.find().sort({ createdAt: -1 }).limit(5).lean(),
+      ]);
+
+    return NextResponse.json({
+      totalProperties,
+      available,
+      sold,
+      totalUsers,
+      inquiries,
+      totalValue: 0, // scraped prices are strings; skipping aggregate sum
+      recentProperties,
+    });
   } catch (err) {
+    console.error(err);
     return NextResponse.json({ error: "Failed to fetch stats" }, { status: 500 });
   }
 }

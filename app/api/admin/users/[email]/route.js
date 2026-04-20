@@ -1,7 +1,11 @@
-import { prisma } from "@/lib/prisma";
+// app/api/admin/users/[email]/route.js
+import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/authOptions";
-import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
 
 export async function DELETE(req, { params }) {
   try {
@@ -10,15 +14,16 @@ export async function DELETE(req, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const email = params.email; // can't use decodeURIComponent on params directly
+    await connectDB();
 
-    const user = await prisma.user.delete({
-      where: { email },
-    });
+    const email = decodeURIComponent(params.email);
+    const user = await User.findOneAndDelete({ email });
+
+    if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
 
     return NextResponse.json({ success: true, user });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

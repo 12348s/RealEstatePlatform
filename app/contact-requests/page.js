@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense } from "react";
 import Navbar from "@/components/Navbar";
 
-export default function ContactRequestsPage() {
+function ContactRequestsContent() {
   const { data: session, status } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -21,7 +22,7 @@ export default function ContactRequestsPage() {
 
   useEffect(() => {
     const id = searchParams.get("inquiry");
-    if (id) setInquiryId(parseInt(id));
+    if (id) setInquiryId(id.trim());
   }, [searchParams]);
 
   useEffect(() => {
@@ -264,5 +265,25 @@ export default function ContactRequestsPage() {
         </div>
       </div>
     </>
+  );
+}
+
+export default function ContactRequestsPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        minHeight: "100vh", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "center",
+        fontFamily: "sans-serif",
+        color: "#999",
+        fontSize: 16,
+      }}>
+        Loading...
+      </div>
+    }>
+      <ContactRequestsContent />
+    </Suspense>
   );
 }

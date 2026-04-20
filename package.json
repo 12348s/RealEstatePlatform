@@ -6,19 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "db:push": "prisma db push",
-    "db:seed": "node scripts/seed.js",
-    "db:studio": "prisma studio",
-    "db:generate": "prisma generate"
+    "db:seed": "node scripts/seed-mongo.js",
+    "db:seed:old": "node scripts/seed.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@vis.gl/react-google-maps": "^1.8.3",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.3.4",
     "next": "14.2.0",
+    "next-auth": "^4.24.5",
     "react": "^18",
     "react-dom": "^18",
-    "@prisma/client": "^5.10.0",
-    "next-auth": "^4.24.5",
-    "bcryptjs": "^2.4.3",
-    "prisma": "^5.10.0"
+    "yet-another-react-lightbox": "^2.6.2"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",

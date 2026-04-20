@@ -269,9 +269,9 @@ export default function AgentDashboard() {
                     {/* Details */}
                     <div>
                       <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 5 }}>{prop.title}</h3>
-                      <p style={{ color: "#666", fontSize: 14, marginBottom: 10 }}>{prop.location}</p>
+                      <p style={{ color: "#666", fontSize: 14, marginBottom: 10 }}>{prop.locality || "Location unknown"}</p>
                       <p style={{ fontSize: 14, fontWeight: 600 }}>
-                        ₹{(prop.price / 1000000).toFixed(1)}M • {prop.area} sqft
+                        ₹{prop.price || "N/A"} • {prop.area || "Area N/A"}
                       </p>
                       <span
                         style={{
@@ -291,7 +291,7 @@ export default function AgentDashboard() {
 
                     {/* Actions */}
                     <div style={{ display: "grid", gap: 8 }}>
-                      <Link href={`/property/${prop.id}`}>
+                      <Link href={`/property/${prop.id || prop._id}`}>
                         <button style={{
                           width: "100%",
                           background: "#f0f0f0",
@@ -305,7 +305,7 @@ export default function AgentDashboard() {
                           View
                         </button>
                       </Link>
-                      <Link href={`/property/add?id=${prop.id}`}>
+                      <Link href={`/property/add?id=${prop.id || prop._id}`}>
                         <button style={{
                           width: "100%",
                           background: "#E3F2FD",

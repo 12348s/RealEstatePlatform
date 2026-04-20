@@ -105,7 +105,7 @@ export default function UserDashboard() {
             ) : (
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 20 }}>
                 {savedProperties.map(prop => (
-                  <div key={prop.id}>
+                  <div key={prop.id || prop._id}>
                     <PropertyCard prop={prop} />
                   </div>
                 ))}

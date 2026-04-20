@@ -68,8 +68,13 @@ export default function AdminDashboard() {
   const handleDeleteProperty = async (id) => {
     if (!confirm("Delete this property?")) return;
     try {
-      await fetch(`/api/properties/${id}`, { method: "DELETE" });
-      setProperties(properties.filter(p => p.id !== id));
+      const res = await fetch(`/api/properties/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || "Failed to delete");
+        return;
+      }
+      setProperties(prev => prev.filter(p => p._id !== id));
     } catch (e) {
       alert("Error deleting property");
     }
@@ -195,15 +200,15 @@ export default function AdminDashboard() {
                   <tbody>
                     {properties.map(prop => (
                       <tr
-                        key={prop.id}
+                        key={prop.id || prop._id?.toString()}
                         style={{
                           borderBottom: "1px solid #e0e0e0",
                           background: prop.status === "available" ? "white" : "#f5f5f5",
                         }}
                       >
                         <td style={{ padding: 12 }}>{prop.title}</td>
-                        <td style={{ padding: 12 }}>{prop.location}</td>
-                        <td style={{ padding: 12 }}>₹{(prop.price / 1000000).toFixed(1)}M</td>
+                        <td style={{ padding: 12 }}>{prop.locality || "N/A"}</td>
+                        <td style={{ padding: 12 }}>₹{prop.price || "N/A"}</td>
                         <td style={{ padding: 12 }}>
                           <span style={{
                             background: prop.status === "available" ? "#E0F2F1" : "#FEE2E2",
@@ -218,7 +223,7 @@ export default function AdminDashboard() {
                         </td>
                         <td style={{ padding: 12 }}>
                           <button
-                            onClick={() => handleDeleteProperty(prop.id)}
+                            onClick={() => handleDeleteProperty(prop._id)}
                             style={{
                               background: "#FFEBEE",
                               border: "1px solid #EF9A9A",

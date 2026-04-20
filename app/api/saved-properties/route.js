@@ -1,99 +1,95 @@
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
+// app/api/saved-properties/route.js
 import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/authOptions";
+
+export const dynamic = "force-dynamic";
+import { connectDB } from "@/lib/mongodb";
+import SavedProperty from "@/models/SavedProperty";
+import Property from "@/models/Property";
+import mongoose from "mongoose";
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get("userId");
+    if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
 
-    if (!userId) {
-      return NextResponse.json({ error: "userId required" }, { status: 400 });
-    }
+    await connectDB();
 
-    const saved = await prisma.savedProperty.findMany({
-      where: { userId: parseInt(userId) },
-      include: { property: true },
-      orderBy: { createdAt: "desc" },
-    });
+    const saved = await SavedProperty.find({ userId }).sort({ createdAt: -1 }).lean();
+
+    // Fetch each property (handles both ObjectId and original "P89075154" style IDs)
+    const properties = await Promise.all(
+      saved.map(async (s) => {
+        if (mongoose.Types.ObjectId.isValid(s.propertyId)) {
+          try {
+            const byMongoId = await Property.findById(s.propertyId).lean();
+            if (byMongoId) return byMongoId;
+          } catch (e) {
+            // Fall through to id search
+          }
+        }
+        return Property.findOne({ id: s.propertyId }).lean();
+      })
+    );
 
     return NextResponse.json({
-      properties: saved.map(s => s.property),
-      total: saved.length,
+      properties: properties.filter(Boolean),
+      total: properties.filter(Boolean).length,
     });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function POST(req) {
   try {
     const session = await getServerSession(authOptions);
-    
-    console.log("Session:", session);
-    
     if (!session?.user?.id) {
-      console.log("No session or user ID found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const { propertyId } = body;
+    await connectDB();
+    const { propertyId } = await req.json();
+    if (!propertyId) return NextResponse.json({ error: "propertyId required" }, { status: 400 });
 
-    if (!propertyId) {
-      return NextResponse.json({ error: "propertyId required" }, { status: 400 });
-    }
-
-    const userId = typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id;
-    
-    console.log("Saving property:", { userId, propertyId });
-
-    const saved = await prisma.savedProperty.create({
-      data: {
-        userId: userId,
-        propertyId: parseInt(propertyId),
-      },
+    const saved = await SavedProperty.create({
+      userId: session.user.id,
+      propertyId: String(propertyId),
     });
 
     return NextResponse.json(saved, { status: 201 });
-  } catch (error) {
-    console.error("Save error:", error);
-    if (error.code === "P2002") {
+  } catch (err) {
+    console.error(err);
+    if (err.code === 11000) {
       return NextResponse.json({ error: "Already saved" }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req) {
   try {
     const session = await getServerSession(authOptions);
-    
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    await connectDB();
     const { searchParams } = new URL(req.url);
     const propertyId = searchParams.get("propertyId");
+    if (!propertyId) return NextResponse.json({ error: "propertyId required" }, { status: 400 });
 
-    if (!propertyId) {
-      return NextResponse.json({ error: "propertyId required" }, { status: 400 });
-    }
-
-    const userId = typeof session.user.id === 'string' ? parseInt(session.user.id) : session.user.id;
-
-    await prisma.savedProperty.deleteMany({
-      where: {
-        userId: userId,
-        propertyId: parseInt(propertyId),
-      },
+    await SavedProperty.deleteMany({
+      userId: session.user.id,
+      propertyId: String(propertyId),
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Delete error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

@@ -1,59 +1,47 @@
-import { prisma } from "@/lib/prisma";
+// app/api/inquiries/[id]/route.js
 import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/mongodb";
+import Inquiry from "@/models/Inquiry";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(req, { params }) {
   try {
-    const id = parseInt(params.id);
+    await connectDB();
+    const inquiry = await Inquiry.findById(params.id)
+      .populate("userId", "name email phone")
+      .lean();
 
-    const inquiry = await prisma.inquiry.findUnique({
-      where: { id },
-      include: {
-        property: true,
-        user: { select: { id: true, name: true, email: true, phone: true } },
-      },
-    });
-
-    if (!inquiry) {
-      return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
-    }
-
+    if (!inquiry) return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
     return NextResponse.json({ inquiry, messages: [] });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function PATCH(req, { params }) {
   try {
-    const id = parseInt(params.id);
-    const body = await req.json();
-    const { status } = body;
-
-    const inquiry = await prisma.inquiry.update({
-      where: { id },
-      data: { status },
-      include: { property: true, user: true },
-    });
-
+    await connectDB();
+    const { status } = await req.json();
+    const inquiry = await Inquiry.findByIdAndUpdate(params.id, { status }, { new: true })
+      .populate("userId", "name email phone")
+      .lean();
+    if (!inquiry) return NextResponse.json({ error: "Inquiry not found" }, { status: 404 });
     return NextResponse.json({ inquiry });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
 
 export async function DELETE(req, { params }) {
   try {
-    const id = parseInt(params.id);
-
-    await prisma.inquiry.delete({
-      where: { id },
-    });
-
+    await connectDB();
+    await Inquiry.findByIdAndDelete(params.id);
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

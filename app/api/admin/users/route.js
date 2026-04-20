@@ -1,8 +1,11 @@
-import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth/next";
+// app/api/admin/users/route.js
 import { NextResponse } from "next/server";
-
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/app/api/auth/authOptions";
+
+export const dynamic = "force-dynamic";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
 
 export async function GET(req) {
   try {
@@ -11,21 +14,16 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        phone: true,
-        createdAt: true,
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    await connectDB();
+
+    const users = await User.find()
+      .select("name email role phone createdAt")
+      .sort({ createdAt: -1 })
+      .lean();
 
     return NextResponse.json({ users, total: users.length });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (err) {
+    console.error(err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
