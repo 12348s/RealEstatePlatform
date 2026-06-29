@@ -2,7 +2,9 @@
 
 A comprehensive real estate platform built with Next.js, featuring property listings, user authentication, agent management, and a monetized contact system.
 
-## 🚀 Features
+Website: https://real-estate-platform-six-iota.vercel.app
+
+## Features
 
 ### Core Functionality
 - **Property Listings**: Browse, search, and filter properties by type, location, price, and status
@@ -23,7 +25,7 @@ A comprehensive real estate platform built with Next.js, featuring property list
 - **Real-time Updates**: Instant UI updates for actions like deleting properties
 - **Data Seeding**: Pre-populated with sample properties and users
 
-## 🛠 Tech Stack
+## Tech Stack
 
 ### Frontend
 - **Next.js 14** - React framework with App Router
@@ -44,13 +46,13 @@ A comprehensive real estate platform built with Next.js, featuring property list
 - **npm** - Package manager
 - **ESLint** - Code linting
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js 18+
 - MongoDB (local or cloud instance)
 - npm or yarn
 
-## 🚀 Installation
+## Installation
 
 1. **Clone the repository**
    ```bash
@@ -86,7 +88,7 @@ A comprehensive real estate platform built with Next.js, featuring property list
 
    Visit `http://localhost:3000` to view the application.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 RealEstatePlatform/
@@ -128,7 +130,7 @@ RealEstatePlatform/
 └── public/                       # Static assets
 ```
 
-## 🔧 API Endpoints
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/[...nextauth]` - NextAuth handler
@@ -159,7 +161,7 @@ RealEstatePlatform/
 - `GET /api/admin/users` - All users
 - `DELETE /api/admin/users/[email]` - Delete user
 
-## 🗄 Database Schema
+## Database Schema
 
 ### User Model
 ```javascript
@@ -214,7 +216,7 @@ RealEstatePlatform/
 }
 ```
 
-## 🎯 Usage
+## Usage
 
 ### For Buyers
 1. Browse properties on the homepage or listings page
@@ -234,7 +236,7 @@ RealEstatePlatform/
 3. Manage all users and properties
 4. Delete inappropriate content
 
-## 🔐 Authentication Flow
+## Authentication Flow
 
 The platform uses role-based authentication with separate login pages:
 
@@ -244,7 +246,7 @@ The platform uses role-based authentication with separate login pages:
 
 Registration is available at `/register` for new agents.
 
-## 💳 Payment System
+## Payment System
 
 The contact system requires payment before revealing agent details:
 
@@ -253,14 +255,14 @@ The contact system requires payment before revealing agent details:
 
 Payment is mocked - no real transactions occur.
 
-## 📱 Responsive Design
+## Responsive Design
 
 The application is fully responsive and works on:
 - Desktop computers
 - Tablets
 - Mobile phones
 
-## 🧪 Testing
+## Testing
 
 Run the development server and test features:
 - User registration and login
@@ -269,7 +271,7 @@ Run the development server and test features:
 - Dashboard functionalities
 - Admin operations
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -277,11 +279,11 @@ Run the development server and test features:
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
-## 🆘 Support
+## Support
 
 For issues or questions:
 - Check the existing issues on GitHub
@@ -289,8 +291,6 @@ For issues or questions:
 - Include error messages and steps to reproduce
 
 ---
-
-Built with ❤️ using Next.js and MongoDB
 
 Or just drag-and-drop the folders in VS Code.
 
